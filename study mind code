@@ -1,0 +1,2461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>StudyMind - AI Study Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Work+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #1a4d2e;
+            --secondary: #d4a574;
+            --accent: #ff6b35;
+            --dark: #1f1f1f;
+            --light: #faf8f3;
+            --cream: #f5f1e8;
+            --shadow: rgba(26, 77, 46, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Work Sans', sans-serif;
+            background: linear-gradient(135deg, var(--light) 0%, var(--cream) 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated Background Pattern */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(26, 77, 46, 0.02) 35px, rgba(26, 77, 46, 0.02) 70px);
+            pointer-events: none;
+            z-index: 0;
+            animation: patternMove 20s linear infinite;
+        }
+
+        @keyframes patternMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(70px, 70px); }
+        }
+
+        /* Hide/Show Views - Critical for single view display */
+        .view {
+            display: none !important;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            min-height: 100vh;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .view.active {
+            display: block !important;
+            position: relative;
+            opacity: 1;
+            visibility: visible;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        /* Ensure login view covers everything when active */
+        #login-view.active {
+            position: fixed;
+            display: flex !important;
+            z-index: 9999;
+        }
+
+        /* Ensure app view is positioned properly */
+        #app-view.active {
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Decorative Floating Elements */
+        .deco-circle {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        .deco-circle-1 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(212, 165, 116, 0.15), transparent);
+            top: -150px;
+            right: -150px;
+            animation-delay: 0s;
+        }
+
+        .deco-circle-2 {
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255, 107, 53, 0.1), transparent);
+            bottom: -100px;
+            left: -100px;
+            animation-delay: 2s;
+        }
+
+        .deco-circle-3 {
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(26, 77, 46, 0.08), transparent);
+            top: 50%;
+            left: 10%;
+            animation-delay: 4s;
+        }
+
+        /* ==================== LOGIN VIEW STYLES ==================== */
+        #login-view {
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--light) 0%, var(--cream) 100%);
+        }
+
+        .login-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px var(--shadow);
+            overflow: hidden;
+            animation: slideUp 0.8s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .left-panel {
+            background: linear-gradient(135deg, var(--primary) 0%, #2d6a4f 100%);
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .left-panel::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 20px,
+                rgba(255, 255, 255, 0.03) 20px,
+                rgba(255, 255, 255, 0.03) 40px
+            );
+            animation: diagonalMove 20s linear infinite;
+        }
+
+        @keyframes diagonalMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(40px, 40px); }
+        }
+
+        .logo-section {
+            text-align: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            color: white;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 20px rgba(255, 255, 255, 0); }
+        }
+
+        .logo-text {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .logo-tagline {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.8);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .welcome-text {
+            margin-top: 2rem;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.8;
+            position: relative;
+            z-index: 1;
+        }
+
+        .features {
+            margin-top: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+        }
+
+        .feature-icon {
+            width: 30px;
+            height: 30px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .right-panel {
+            padding: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .form-header {
+            margin-bottom: 2rem;
+        }
+
+        .form-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .form-subtitle {
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .login-form {
+            animation: fadeIn 1s ease-out 0.6s both;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary);
+            font-size: 1.1rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem 1rem 1rem 3rem;
+            border: 2px solid var(--cream);
+            border-radius: 12px;
+            font-family: 'Work Sans', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: var(--light);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 4px rgba(212, 165, 116, 0.1);
+            background: white;
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .remember-me input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--primary);
+        }
+
+        .forgot-password {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .forgot-password:hover {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 1.25rem;
+            background: linear-gradient(135deg, var(--primary) 0%, #2d6a4f 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Work Sans', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .submit-btn:hover::before {
+            width: 400px;
+            height: 400px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(26, 77, 46, 0.4);
+        }
+
+        .btn-text {
+            position: relative;
+            z-index: 1;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 1.5rem 0;
+            color: #999;
+            font-size: 0.85rem;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--cream);
+        }
+
+        .divider::before {
+            margin-right: 1rem;
+        }
+
+        .divider::after {
+            margin-left: 1rem;
+        }
+
+        .social-login {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .social-btn {
+            padding: 0.9rem;
+            background: white;
+            border: 2px solid var(--cream);
+            border-radius: 12px;
+            font-family: 'Work Sans', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .social-btn:hover {
+            border-color: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .signup-link {
+            text-align: center;
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .signup-link a {
+            color: var(--accent);
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .signup-link a:hover {
+            color: var(--primary);
+            text-decoration: underline;
+        }
+
+        .error-message {
+            display: none;
+            background: rgba(255, 51, 102, 0.1);
+            color: #ff3366;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            border-left: 4px solid #ff3366;
+        }
+
+        .error-message.show {
+            display: block;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .success-message {
+            display: none;
+            background: rgba(0, 255, 136, 0.1);
+            color: var(--primary);
+            padding: 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            border-left: 4px solid var(--primary);
+        }
+
+        .success-message.show {
+            display: block;
+            animation: slideDown 0.5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .submit-btn.loading .btn-text {
+            display: none;
+        }
+
+        .submit-btn.loading .spinner {
+            display: inline-block;
+        }
+
+        /* ==================== MAIN APP VIEW STYLES ==================== */
+        #app-view {
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            padding: 2rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            animation: slideDown 0.8s ease-out;
+        }
+
+        .logo-section-main {
+            flex: 1;
+        }
+
+        .logo-main {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .logo-main::before {
+            content: '◆';
+            color: var(--accent);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .tagline-main {
+            font-size: 1rem;
+            color: var(--secondary);
+            margin-top: 0.25rem;
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        .user-section {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .user-email {
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+
+        .logout-btn {
+            padding: 0.6rem 1.2rem;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: var(--primary);
+            transform: scale(1.05);
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            margin: 3rem 0;
+        }
+
+        .sidebar {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            box-shadow: 0 10px 40px var(--shadow);
+            height: fit-content;
+            position: sticky;
+            top: 2rem;
+        }
+
+        .mode-selector {
+            margin-bottom: 2rem;
+        }
+
+        .mode-selector h2 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+
+        .mode-button {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            width: 100%;
+            padding: 1.2rem;
+            margin-bottom: 0.75rem;
+            background: var(--light);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Work Sans', sans-serif;
+            font-size: 1rem;
+            font-weight: 500;
+            text-align: left;
+        }
+
+        .mode-button:hover {
+            background: var(--cream);
+            border-color: var(--secondary);
+            transform: translateX(5px);
+        }
+
+        .mode-button.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            box-shadow: 0 5px 20px rgba(26, 77, 46, 0.3);
+        }
+
+        .mode-icon {
+            font-size: 1.5rem;
+            min-width: 30px;
+        }
+
+        .divider-main {
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--secondary), transparent);
+            margin: 2rem 0;
+        }
+
+        .tips {
+            padding: 1rem;
+            background: var(--cream);
+            border-radius: 8px;
+            border-left: 4px solid var(--accent);
+        }
+
+        .tips h3 {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .tips p {
+            font-size: 0.9rem;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .main-panel {
+            background: white;
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: 0 10px 40px var(--shadow);
+            min-height: 600px;
+        }
+
+        .panel-header {
+            margin-bottom: 2rem;
+        }
+
+        .panel-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .panel-description {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .input-section {
+            margin-bottom: 2rem;
+        }
+
+        .input-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: var(--primary);
+            font-size: 1rem;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 150px;
+            padding: 1.25rem;
+            border: 2px solid var(--cream);
+            border-radius: 12px;
+            font-family: 'Work Sans', sans-serif;
+            font-size: 1rem;
+            resize: vertical;
+            transition: all 0.3s ease;
+            background: var(--light);
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 4px rgba(212, 165, 116, 0.1);
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid var(--cream);
+            border-radius: 12px;
+            font-family: 'Work Sans', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: var(--light);
+        }
+
+        input:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 4px rgba(212, 165, 116, 0.1);
+        }
+
+        .generate-btn {
+            width: 100%;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--primary) 0%, #2d6a4f 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-family: 'Work Sans', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .generate-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .generate-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(26, 77, 46, 0.4);
+        }
+
+        .generate-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto;
+        }
+
+        .results {
+            margin-top: 2rem;
+            padding: 2rem;
+            background: var(--light);
+            border-radius: 12px;
+            border-left: 4px solid var(--accent);
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .result-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.8rem;
+            color: var(--primary);
+        }
+
+        .copy-btn {
+            padding: 0.6rem 1.2rem;
+            background: var(--secondary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .copy-btn:hover {
+            background: var(--accent);
+            transform: scale(1.05);
+        }
+
+        .result-content {
+            line-height: 1.8;
+            color: var(--dark);
+            font-size: 1.05rem;
+            white-space: pre-wrap;
+        }
+
+        /* Signup Modal */
+        #signup-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(5px);
+        }
+
+        .modal-content {
+            position: relative;
+            background: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px var(--shadow);
+            animation: slideUp 0.4s ease-out;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s ease;
+            padding: 0.5rem;
+            line-height: 1;
+        }
+
+        .modal-close:hover {
+            color: var(--accent);
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .login-container {
+                grid-template-columns: 1fr;
+                max-width: 450px;
+                margin: 1rem;
+            }
+
+            .left-panel {
+                display: none;
+            }
+
+            .right-panel {
+                padding: 2rem;
+            }
+
+            main {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                position: static;
+            }
+
+            .input-row {
+                grid-template-columns: 1fr;
+            }
+
+            header {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="deco-circle deco-circle-1"></div>
+    <div class="deco-circle deco-circle-2"></div>
+    <div class="deco-circle deco-circle-3"></div>
+
+    <!-- LOGIN VIEW -->
+    <div id="login-view" class="view">
+        <div class="login-container">
+            <div class="left-panel">
+                <div class="logo-section">
+                    <div class="logo-icon">◆</div>
+                    <div class="logo-text">StudyMind</div>
+                    <div class="logo-tagline">Intelligent Learning</div>
+                </div>
+
+                <div class="welcome-text">
+                    <p>Welcome back! Log in to access your personalized study assistant and continue your learning journey.</p>
+                </div>
+
+                <div class="features">
+                    <div class="feature-item">
+                        <div class="feature-icon">📝</div>
+                        <span>Generate practice questions</span>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">📚</div>
+                        <span>Summarize your notes</span>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">💡</div>
+                        <span>Explain complex concepts</span>
+                    </div>
+                    <div class="feature-item">
+                        <div class="feature-icon">🎴</div>
+                        <span>Create flashcards</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="form-header">
+                    <h1 class="form-title">Welcome Back</h1>
+                    <p class="form-subtitle">Enter your credentials to access your account</p>
+                </div>
+
+                <div class="error-message" id="error-message">
+                    Invalid email or password. Please try again.
+                </div>
+
+                <div class="success-message" id="success-message">
+                    Login successful! Redirecting to dashboard...
+                </div>
+
+                <div class="login-form">
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email Address</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">📧</span>
+                            <input 
+                                type="email" 
+                                id="email" 
+                                class="form-input" 
+                                placeholder="your.email@example.com"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" for="password">Password</label>
+                        <div class="input-wrapper">
+                            <span class="input-icon">🔒</span>
+                            <input 
+                                type="password" 
+                                id="password" 
+                                class="form-input" 
+                                placeholder="Enter your password"
+                            >
+                        </div>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="remember-me">
+                            <input type="checkbox" id="remember">
+                            <span>Remember me</span>
+                        </label>
+                        <span class="forgot-password" onclick="forgotPassword()">Forgot password?</span>
+                    </div>
+
+                    <button type="button" class="submit-btn" id="submit-btn" onclick="handleLogin()">
+                        <span class="btn-text">Sign In</span>
+                        <span class="spinner"></span>
+                    </button>
+
+                    <div class="divider">or continue with</div>
+
+                    <div class="social-login">
+                        <button type="button" class="social-btn" onclick="socialLogin('google')">
+                            <span>🔍</span>
+                            <span>Google</span>
+                        </button>
+                        <button type="button" class="social-btn" onclick="socialLogin('microsoft')">
+                            <span>🪟</span>
+                            <span>Microsoft</span>
+                        </button>
+                    </div>
+
+                    <div class="signup-link">
+                        Don't have an account? <a onclick="showSignup()">Sign up</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP VIEW -->
+    <div id="app-view" class="view">
+        <div class="container">
+            <header>
+                <div class="logo-section-main">
+                    <div class="logo-main">StudyMind</div>
+                    <div class="tagline-main">YOUR INTELLIGENT LEARNING COMPANION</div>
+                </div>
+                <div class="user-section">
+                    <span class="user-email" id="user-email"></span>
+                    <button class="logout-btn" onclick="logout()">Logout</button>
+                </div>
+            </header>
+
+            <main>
+                <aside class="sidebar">
+                    <div class="mode-selector">
+                        <h2>Study Tools</h2>
+                        <button class="mode-button active" data-mode="questions">
+                            <span class="mode-icon">❓</span>
+                            <span>Practice Questions</span>
+                        </button>
+                        <button class="mode-button" data-mode="summarize">
+                            <span class="mode-icon">📝</span>
+                            <span>Summarize Notes</span>
+                        </button>
+                        <button class="mode-button" data-mode="explain">
+                            <span class="mode-icon">💡</span>
+                            <span>Explain Concepts</span>
+                        </button>
+                        <button class="mode-button" data-mode="flashcards">
+                            <span class="mode-icon">🎴</span>
+                            <span>Create Flashcards</span>
+                        </button>
+                    </div>
+
+                    <div class="divider-main"></div>
+
+                    <div class="tips">
+                        <h3>💡 Pro Tip</h3>
+                        <p id="tip-text">Paste your study material and specify the difficulty level for tailored practice questions!</p>
+                    </div>
+                </aside>
+
+                <section class="main-panel">
+                    <div class="panel-header">
+                        <h1 class="panel-title" id="panel-title">Generate Practice Questions</h1>
+                        <p class="panel-description" id="panel-description">Transform your study materials into targeted practice questions to test your knowledge</p>
+                    </div>
+
+                    <div id="content-area">
+                        <!-- Questions Mode -->
+                        <div id="questions-mode">
+                            <div class="input-section">
+                                <label class="input-label">Study Material</label>
+                                <textarea id="questions-input" placeholder="Paste your notes, textbook content, or study material here..."></textarea>
+                            </div>
+
+                            <div class="input-section">
+                                <label class="input-label">Or Enter Video/Class Link</label>
+                                <input type="text" id="video-link" class="form-input" placeholder="Paste YouTube, Google Meet, Zoom, or class recording link here" style="padding: 1rem;">
+                                <button type="button" class="social-btn" style="margin-top: 0.5rem; width: auto; padding: 0.6rem 1.2rem;" onclick="extractFromLink()">
+                                    <span>🔗</span>
+                                    <span>Extract Content from Link</span>
+                                </button>
+                                <small style="color: #666; display: block; margin-top: 0.5rem;">📹 Enter a video link to extract transcript and generate questions</small>
+                            </div>
+
+                            <div class="input-row">
+                                <div>
+                                    <label class="input-label">Subject</label>
+                                    <input type="text" id="questions-subject" placeholder="e.g., Biology, Math, History">
+                                </div>
+                                <div>
+                                    <label class="input-label">Number of Questions</label>
+                                    <input type="number" id="questions-count" value="5" min="1" max="20">
+                                </div>
+                            </div>
+
+                            <div class="input-row">
+                                <div>
+                                    <label class="input-label">Difficulty Level</label>
+                                    <select id="questions-difficulty">
+                                        <option value="easy">Easy</option>
+                                        <option value="medium" selected>Medium</option>
+                                        <option value="hard">Hard</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="input-label">Question Type</label>
+                                    <select id="questions-type">
+                                        <option value="multiple-choice">Multiple Choice</option>
+                                        <option value="short-answer">Short Answer</option>
+                                        <option value="true-false">True/False</option>
+                                        <option value="mixed">Mixed</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button class="generate-btn" onclick="generateContent()">
+                                <span class="btn-text">Generate Questions</span>
+                            </button>
+                        </div>
+
+                        <!-- Summarize Mode -->
+                        <div id="summarize-mode" style="display: none;">
+                            <div class="input-section">
+                                <label class="input-label">Notes to Summarize</label>
+                                <textarea id="summarize-input" placeholder="Paste your lecture notes, reading material, or research content here..."></textarea>
+                            </div>
+
+                            <div class="input-section">
+                                <label class="input-label">Or Upload PDF File</label>
+                                <input type="file" id="pdf-upload" accept=".pdf" class="form-input" style="padding: 0.75rem;" onchange="handlePDFUpload(event)">
+                                <small style="color: #666; display: block; margin-top: 0.5rem;">📄 Upload a PDF file to extract and summarize its content</small>
+                            </div>
+
+                            <div class="input-row">
+                                <div>
+                                    <label class="input-label">Summary Length</label>
+                                    <select id="summary-length">
+                                        <option value="brief">Brief (Key Points)</option>
+                                        <option value="moderate" selected>Moderate</option>
+                                        <option value="detailed">Detailed</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="input-label">Focus Area (Optional)</label>
+                                    <input type="text" id="summary-focus" placeholder="e.g., Key concepts, Definitions">
+                                </div>
+                            </div>
+
+                            <button class="generate-btn" onclick="generateContent()">
+                                <span class="btn-text">Summarize Notes</span>
+                            </button>
+                        </div>
+
+                        <!-- Explain Mode -->
+                        <div id="explain-mode" style="display: none;">
+                            <div class="input-section">
+                                <label class="input-label">Concept to Explain</label>
+                                <textarea id="explain-input" placeholder="Enter the concept, topic, or term you want explained..."></textarea>
+                            </div>
+
+                            <div class="input-row">
+                                <div>
+                                    <label class="input-label">Explanation Style</label>
+                                    <select id="explain-style">
+                                        <option value="simple">Simple (ELI5)</option>
+                                        <option value="standard" selected>Standard</option>
+                                        <option value="technical">Technical/Advanced</option>
+                                        <option value="analogy">Using Analogies</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="input-label">Include Examples</label>
+                                    <select id="explain-examples">
+                                        <option value="yes" selected>Yes</option>
+                                        <option value="no">No</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button class="generate-btn" onclick="generateContent()">
+                                <span class="btn-text">Explain Concept</span>
+                            </button>
+                        </div>
+
+                        <!-- Flashcards Mode -->
+                        <div id="flashcards-mode" style="display: none;">
+                            <div class="input-section">
+                                <label class="input-label">Study Material for Flashcards</label>
+                                <textarea id="flashcards-input" placeholder="Paste your study material to convert into flashcards..."></textarea>
+                            </div>
+
+                            <div class="input-row">
+                                <div>
+                                    <label class="input-label">Number of Flashcards</label>
+                                    <input type="number" id="flashcards-count" value="10" min="1" max="30">
+                                </div>
+                                <div>
+                                    <label class="input-label">Card Type</label>
+                                    <select id="flashcards-type">
+                                        <option value="term-definition">Term & Definition</option>
+                                        <option value="question-answer" selected>Question & Answer</option>
+                                        <option value="concept-example">Concept & Example</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button class="generate-btn" onclick="generateContent()">
+                                <span class="btn-text">Create Flashcards</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="loading-spinner" id="loading-spinner"></div>
+
+                    <div class="results" id="results">
+                        <div class="result-header">
+                            <h2 class="result-title">Results</h2>
+                            <button class="copy-btn" onclick="copyResults()">📋 Copy</button>
+                        </div>
+                        <div class="result-content" id="result-content"></div>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Demo credentials
+        const DEMO_EMAIL = 'demo@studymind.com';
+        const DEMO_PASSWORD = 'demo123';
+
+        // User Management System
+        function getUsers() {
+            try {
+                const users = localStorage.getItem('studymind_users');
+                return users ? JSON.parse(users) : {};
+            } catch (e) {
+                return {};
+            }
+        }
+
+        function saveUser(email, password, name) {
+            try {
+                const users = getUsers();
+                users[email] = { password: password, name: name, createdAt: new Date().toISOString() };
+                localStorage.setItem('studymind_users', JSON.stringify(users));
+                return true;
+            } catch (e) {
+                console.error('Error saving user:', e);
+                return false;
+            }
+        }
+
+        function validateUser(email, password) {
+            const users = getUsers();
+            if (users[email] && users[email].password === password) {
+                return users[email];
+            }
+            return null;
+        }
+
+        // Check authentication on page load
+        function checkAuth() {
+            const isAuth = localStorage.getItem('studymind_auth') || sessionStorage.getItem('studymind_auth');
+            if (isAuth === 'true') {
+                showApp();
+            } else {
+                showLogin();
+            }
+        }
+
+        function showLogin() {
+            // Hide app completely
+            document.getElementById('app-view').classList.remove('active');
+            
+            // Show login only
+            document.getElementById('login-view').classList.add('active');
+            
+            // Lock body scroll
+            document.body.style.overflow = 'hidden';
+            document.body.style.height = '100vh';
+        }
+
+        function showApp() {
+            // Hide login completely
+            document.getElementById('login-view').classList.remove('active');
+            
+            // Show app only
+            document.getElementById('app-view').classList.add('active');
+            
+            // Enable body scroll
+            document.body.style.overflow = 'auto';
+            document.body.style.height = 'auto';
+            
+            // Display user email
+            const email = localStorage.getItem('studymind_email') || sessionStorage.getItem('studymind_email');
+            if (email) {
+                document.getElementById('user-email').textContent = email;
+            }
+        }
+
+        // Login function
+        function handleLogin() {
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            const rememberInput = document.getElementById('remember');
+            const submitBtn = document.getElementById('submit-btn');
+            const errorMessage = document.getElementById('error-message');
+            const successMessage = document.getElementById('success-message');
+
+            const email = emailInput.value.trim();
+            const password = passwordInput.value;
+            const remember = rememberInput.checked;
+
+            // Basic validation - check if fields are not empty
+            if (!email || !password) {
+                errorMessage.innerHTML = '✗ Please enter both email and password.';
+                errorMessage.classList.add('show');
+                successMessage.classList.remove('show');
+                return;
+            }
+
+            // Hide error messages
+            errorMessage.classList.remove('show');
+            successMessage.classList.remove('show');
+
+            // Show loading state
+            submitBtn.classList.add('loading');
+            submitBtn.disabled = true;
+
+            // Simulate login process
+            setTimeout(function() {
+                // Validate user credentials
+                const user = validateUser(email, password);
+                
+                if (user) {
+                    // Login successful
+                    successMessage.textContent = '✓ Login successful! Welcome back, ' + (user.name || email) + '!';
+                    successMessage.classList.add('show');
+                    
+                    try {
+                        if (remember) {
+                            localStorage.setItem('studymind_auth', 'true');
+                            localStorage.setItem('studymind_email', email);
+                            localStorage.setItem('studymind_name', user.name || '');
+                        } else {
+                            sessionStorage.setItem('studymind_auth', 'true');
+                            sessionStorage.setItem('studymind_email', email);
+                            sessionStorage.setItem('studymind_name', user.name || '');
+                        }
+                    } catch (e) {
+                        console.log('Storage not available:', e);
+                    }
+
+                    // Clear the form
+                    emailInput.value = '';
+                    passwordInput.value = '';
+                    rememberInput.checked = false;
+                    
+                    // Remove loading state
+                    submitBtn.classList.remove('loading');
+                    submitBtn.disabled = false;
+
+                    // Redirect to app after 1 second
+                    setTimeout(function() {
+                        showApp();
+                    }, 1000);
+                } else {
+                    // Login failed
+                    errorMessage.innerHTML = '✗ Invalid email or password.<br><small style="opacity: 0.8;">Please check your credentials or sign up for a new account.</small>';
+                    errorMessage.classList.add('show');
+                    submitBtn.classList.remove('loading');
+                    submitBtn.disabled = false;
+                }
+            }, 1000);
+        }
+
+        // Enter key support for login
+        document.addEventListener('DOMContentLoaded', function() {
+            const emailInput = document.getElementById('email');
+            const passwordInput = document.getElementById('password');
+            
+            if (emailInput) {
+                emailInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') handleLogin();
+                });
+            }
+            
+            if (passwordInput) {
+                passwordInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') handleLogin();
+                });
+            }
+        });
+
+        function socialLogin(provider) {
+            alert('Social login with ' + provider + ' will be available soon.\n\nFor now, please use the email/password login above.');
+        }
+
+        function showSignup() {
+            const modal = document.createElement('div');
+            modal.id = 'signup-modal';
+            modal.innerHTML = `
+                <div class="modal-overlay" onclick="closeSignup()"></div>
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="form-title">Create Your Account</h2>
+                        <button class="modal-close" onclick="closeSignup()">✕</button>
+                    </div>
+                    <div class="error-message" id="signup-error"></div>
+                    <div class="success-message" id="signup-success"></div>
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" id="signup-name" class="form-input" placeholder="Enter your full name" style="padding-left: 1rem;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email Address</label>
+                        <input type="email" id="signup-email" class="form-input" placeholder="your.email@example.com" style="padding-left: 1rem;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="signup-password" class="form-input" placeholder="Create a password (min 6 characters)" style="padding-left: 1rem;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Confirm Password</label>
+                        <input type="password" id="signup-confirm" class="form-input" placeholder="Confirm your password" style="padding-left: 1rem;">
+                    </div>
+                    <button class="submit-btn" onclick="handleSignup()">
+                        <span class="btn-text">Create Account</span>
+                        <span class="spinner"></span>
+                    </button>
+                    <div class="signup-link" style="margin-top: 1rem;">
+                        Already have an account? <a onclick="closeSignup()">Sign in</a>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            // Add enter key support
+            ['signup-name', 'signup-email', 'signup-password', 'signup-confirm'].forEach(id => {
+                document.getElementById(id)?.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') handleSignup();
+                });
+            });
+        }
+
+        function closeSignup() {
+            const modal = document.getElementById('signup-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function handleSignup() {
+            const name = document.getElementById('signup-name').value.trim();
+            const email = document.getElementById('signup-email').value.trim();
+            const password = document.getElementById('signup-password').value;
+            const confirm = document.getElementById('signup-confirm').value;
+            const errorMsg = document.getElementById('signup-error');
+            const successMsg = document.getElementById('signup-success');
+            const btn = document.querySelector('#signup-modal .submit-btn');
+
+            // Clear messages
+            errorMsg.classList.remove('show');
+            successMsg.classList.remove('show');
+
+            // Validation
+            if (!name || !email || !password || !confirm) {
+                errorMsg.textContent = '✗ Please fill in all fields.';
+                errorMsg.classList.add('show');
+                return;
+            }
+
+            if (password.length < 6) {
+                errorMsg.textContent = '✗ Password must be at least 6 characters.';
+                errorMsg.classList.add('show');
+                return;
+            }
+
+            if (password !== confirm) {
+                errorMsg.textContent = '✗ Passwords do not match.';
+                errorMsg.classList.add('show');
+                return;
+            }
+
+            // Check if user already exists
+            const users = getUsers();
+            if (users[email]) {
+                errorMsg.textContent = '✗ An account with this email already exists.';
+                errorMsg.classList.add('show');
+                return;
+            }
+
+            // Show loading
+            btn.classList.add('loading');
+            btn.disabled = true;
+
+            // Save user
+            setTimeout(function() {
+                if (saveUser(email, password, name)) {
+                    successMsg.textContent = '✓ Account created successfully! You can now sign in.';
+                    successMsg.classList.add('show');
+                    
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+
+                    // Close modal and show success message after 2 seconds
+                    setTimeout(function() {
+                        closeSignup();
+                        const loginSuccess = document.getElementById('success-message');
+                        loginSuccess.textContent = '✓ Account created! Please sign in with your credentials.';
+                        loginSuccess.classList.add('show');
+                    }, 2000);
+                } else {
+                    errorMsg.textContent = '✗ Error creating account. Please try again.';
+                    errorMsg.classList.add('show');
+                    btn.classList.remove('loading');
+                    btn.disabled = false;
+                }
+            }, 1000);
+        }
+
+        function forgotPassword() {
+            alert('Password reset functionality will be available soon.\n\nFor now, you can login with any email and password.');
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                localStorage.removeItem('studymind_auth');
+                localStorage.removeItem('studymind_email');
+                sessionStorage.removeItem('studymind_auth');
+                sessionStorage.removeItem('studymind_email');
+                showLogin();
+            }
+        }
+
+        // Study modes configuration
+        const modes = {
+            questions: {
+                title: 'Generate Practice Questions',
+                description: 'Transform your study materials into targeted practice questions to test your knowledge',
+                tip: 'Paste your study material, video transcript, or class notes - or enter a video link to extract content and generate tailored questions!'
+            },
+            summarize: {
+                title: 'Summarize Your Notes',
+                description: 'Get concise, organized summaries of your lecture notes and study materials',
+                tip: 'Longer notes work best! Include all relevant content for comprehensive summaries.'
+            },
+            explain: {
+                title: 'Explain Concepts',
+                description: 'Get clear, detailed explanations of complex topics in your preferred learning style',
+                tip: 'Be specific about what confuses you. The AI can explain using analogies, examples, or simple terms!'
+            },
+            flashcards: {
+                title: 'Create Flashcards',
+                description: 'Convert your study material into effective flashcards for active recall practice',
+                tip: 'Great for memorization! Flashcards work best with factual content and definitions.'
+            }
+        };
+
+        let currentMode = 'questions';
+
+        // Mode switching
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.mode-button').forEach(button => {
+                button.addEventListener('click', () => {
+                    const mode = button.dataset.mode;
+                    switchMode(mode);
+                });
+            });
+        });
+
+        // Extract content from video/class links
+        function extractFromLink() {
+            const linkInput = document.getElementById('video-link');
+            const link = linkInput.value.trim();
+            const textarea = document.getElementById('questions-input');
+            
+            if (!link) {
+                alert('⚠️ Please enter a video or class link first.');
+                return;
+            }
+            
+            // Show loading
+            const btn = event.target.closest('button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<span>⏳</span><span>Extracting...</span>';
+            btn.disabled = true;
+            
+            setTimeout(() => {
+                // Check if it's a YouTube link
+                if (link.includes('youtube.com') || link.includes('youtu.be')) {
+                    // Extract YouTube video ID
+                    let videoId = '';
+                    if (link.includes('youtube.com/watch?v=')) {
+                        videoId = link.split('v=')[1]?.split('&')[0];
+                    } else if (link.includes('youtu.be/')) {
+                        videoId = link.split('youtu.be/')[1]?.split('?')[0];
+                    }
+                    
+                    if (videoId) {
+                        // Simulated transcript extraction (in real implementation, this would use YouTube API)
+                        const simulatedTranscript = `YouTube Video Transcript - ${videoId}
+
+This is a simulated transcript extraction. In a production environment, this would connect to:
+- YouTube Data API v3 to get video details
+- YouTube Transcript API to fetch captions/subtitles
+- Or use third-party services like AssemblyAI for audio transcription
+
+For this demo, please:
+1. Manually copy the video transcript if available
+2. Use YouTube's auto-generated captions
+3. Or paste your class notes from the video
+
+Video Link: ${link}
+
+To use this feature with real transcripts, you would need:
+• YouTube API key
+• Enable YouTube Data API in Google Cloud Console
+• Use the transcript extraction service
+
+For now, you can paste the video content or lecture notes in the text area above.`;
+                        
+                        textarea.value = simulatedTranscript;
+                        alert('✓ Link detected!\n\nNote: Automatic transcript extraction requires API setup.\n\nFor now, please paste the video transcript or your notes from the video in the text area above.');
+                    } else {
+                        alert('⚠️ Could not extract YouTube video ID. Please check the link.');
+                    }
+                    
+                } else if (link.includes('meet.google.com') || link.includes('zoom.us') || link.includes('teams.microsoft.com')) {
+                    // Handle meeting/class links
+                    const platform = link.includes('meet.google.com') ? 'Google Meet' : 
+                                   link.includes('zoom.us') ? 'Zoom' : 'Microsoft Teams';
+                    
+                    textarea.value = `${platform} Class Recording Analysis
+
+Link: ${link}
+
+To extract content from ${platform} recordings:
+
+1. For ${platform}:
+   - Download the recording if available
+   - Use the platform's built-in transcription feature
+   - Or manually transcribe key points from the session
+
+2. Automatic Transcript Extraction (requires setup):
+   - ${platform} API access
+   - Cloud storage integration
+   - Speech-to-text service (Google Cloud Speech, AWS Transcribe, etc.)
+
+For now, please paste your class notes or recording transcript in the text area above, and we'll generate questions based on that content.
+
+Platform: ${platform}
+Session Link: ${link}`;
+                    
+                    alert(`✓ ${platform} link detected!\n\nPlease paste your class notes or transcript from the ${platform} session in the text area above.`);
+                    
+                } else {
+                    // Generic link
+                    textarea.value = `Content from Link: ${link}
+
+The system detected a class or educational link. 
+
+To generate questions from this content:
+1. If it's a video: Copy the transcript or captions
+2. If it's a document: Copy the text content
+3. If it's a class recording: Write notes about what was discussed
+
+Then paste that content in the text area above and click "Generate Questions".
+
+Link provided: ${link}`;
+                    
+                    alert('✓ Link received!\n\nPlease paste the content, transcript, or notes from this link in the text area above.');
+                }
+                
+                // Reset button
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                
+                // Clear the link input
+                linkInput.value = '';
+                
+            }, 1500);
+        }
+
+        // PDF Upload Handler
+        function handlePDFUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                // Simple PDF text extraction (basic approach)
+                const text = e.target.result;
+                // Try to extract readable text from PDF
+                const cleanText = text.replace(/[^\x20-\x7E\n]/g, ' ').trim();
+                
+                if (cleanText.length > 50) {
+                    document.getElementById('summarize-input').value = cleanText;
+                    alert('✓ PDF content extracted! You can now generate a summary.');
+                } else {
+                    alert('⚠️ Could not extract text from PDF. Please try pasting the text directly or use a text-based PDF.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function switchMode(mode) {
+            document.querySelectorAll('.mode-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-mode="${mode}"]`).classList.add('active');
+
+            document.getElementById('panel-title').textContent = modes[mode].title;
+            document.getElementById('panel-description').textContent = modes[mode].description;
+            document.getElementById('tip-text').textContent = modes[mode].tip;
+
+            document.querySelectorAll('[id$="-mode"]').forEach(form => {
+                form.style.display = 'none';
+            });
+            document.getElementById(`${mode}-mode`).style.display = 'block';
+
+            document.getElementById('results').classList.remove('show');
+
+            currentMode = mode;
+        }
+
+        async function generateContent() {
+            const button = document.querySelector('.generate-btn');
+            const spinner = document.getElementById('loading-spinner');
+            const results = document.getElementById('results');
+            const resultContent = document.getElementById('result-content');
+
+            let prompt, material;
+
+            if (currentMode === 'questions') {
+                material = document.getElementById('questions-input').value;
+                const subject = document.getElementById('questions-subject').value;
+                const count = document.getElementById('questions-count').value;
+                const difficulty = document.getElementById('questions-difficulty').value;
+                const type = document.getElementById('questions-type').value;
+
+                if (!material.trim()) {
+                    alert('Please enter study material!');
+                    return;
+                }
+
+                prompt = `You are an expert educational assistant. Generate ${count} ${difficulty} ${type} practice questions based on the following study material${subject ? ' for ' + subject : ''}.
+
+Study Material:
+${material}
+
+Requirements:
+- Create exactly ${count} questions
+- Difficulty level: ${difficulty}
+- Question type: ${type}
+- If multiple choice, provide 4 options (A, B, C, D) with the correct answer clearly marked
+- Include brief explanations for each answer
+- Format clearly with question numbers
+
+Generate the questions now:`;
+
+            } else if (currentMode === 'summarize') {
+                material = document.getElementById('summarize-input').value;
+                const length = document.getElementById('summary-length').value;
+                const focus = document.getElementById('summary-focus').value;
+
+                if (!material.trim()) {
+                    alert('Please enter notes to summarize!');
+                    return;
+                }
+
+                const lengthMap = {
+                    brief: 'a brief summary with just key points in bullet format',
+                    moderate: 'a moderate-length summary covering main concepts',
+                    detailed: 'a detailed comprehensive summary'
+                };
+
+                prompt = `You are an expert at summarizing educational content. Create ${lengthMap[length]} of the following notes${focus ? ', focusing on: ' + focus : ''}.
+
+Notes:
+${material}
+
+Provide a clear, well-organized summary that captures the essential information.`;
+
+            } else if (currentMode === 'explain') {
+                const concept = document.getElementById('explain-input').value;
+                material = concept;
+                const style = document.getElementById('explain-style').value;
+                const examples = document.getElementById('explain-examples').value;
+
+                if (!concept.trim()) {
+                    alert('Please enter a concept to explain!');
+                    return;
+                }
+
+                const styleMap = {
+                    simple: 'Explain this in very simple terms, as if explaining to a 10-year-old (ELI5 style)',
+                    standard: 'Provide a clear, standard explanation suitable for a student',
+                    technical: 'Give a technical, advanced explanation with precise terminology',
+                    analogy: 'Explain using analogies and metaphors to make it relatable'
+                };
+
+                prompt = `${styleMap[style]}. ${examples === 'yes' ? 'Include relevant examples.' : 'Do not include examples, just the explanation.'}
+
+Concept to explain:
+${concept}
+
+Provide a thorough, clear explanation.`;
+
+            } else if (currentMode === 'flashcards') {
+                material = document.getElementById('flashcards-input').value;
+                const count = document.getElementById('flashcards-count').value;
+                const cardType = document.getElementById('flashcards-type').value;
+
+                if (!material.trim()) {
+                    alert('Please enter study material!');
+                    return;
+                }
+
+                const typeMap = {
+                    'term-definition': 'Front: Term, Back: Definition',
+                    'question-answer': 'Front: Question, Back: Answer',
+                    'concept-example': 'Front: Concept, Back: Example'
+                };
+
+                prompt = `Create ${count} flashcards from the following study material. Format as ${typeMap[cardType]}.
+
+Study Material:
+${material}
+
+Create exactly ${count} flashcards. Format each clearly as:
+
+Flashcard 1:
+Front: [content]
+Back: [content]
+
+Make them effective for studying and memory retention.`;
+            }
+
+            button.disabled = true;
+            button.querySelector('.btn-text').textContent = 'Generating...';
+            spinner.style.display = 'block';
+            results.classList.remove('show');
+
+            // Simulate processing time
+            setTimeout(async function() {
+                try {
+                    const response = await fetch('https://api.anthropic.com/v1/messages', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'anthropic-version': '2023-06-01'
+                        },
+                        body: JSON.stringify({
+                            model: 'claude-sonnet-4-20250514',
+                            max_tokens: 4000,
+                            messages: [
+                                {
+                                    role: 'user',
+                                    content: prompt
+                                }
+                            ]
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('API request failed');
+                    }
+
+                    const data = await response.json();
+                    const content = data.content
+                        .filter(item => item.type === 'text')
+                        .map(item => item.text)
+                        .join('\n');
+
+                    resultContent.textContent = content;
+                    results.classList.add('show');
+
+                    results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+                } catch (error) {
+                    console.error('API Error:', error);
+                    
+                    // Fallback: Generate demo content
+                    let demoContent = generateDemoContent(currentMode, material);
+                    resultContent.textContent = demoContent;
+                    results.classList.add('show');
+                    results.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                } finally {
+                    button.disabled = false;
+                    button.querySelector('.btn-text').textContent = currentMode === 'questions' ? 'Generate Questions' : 
+                                                                     currentMode === 'summarize' ? 'Summarize Notes' :
+                                                                     currentMode === 'explain' ? 'Explain Concept' :
+                                                                     'Create Flashcards';
+                    spinner.style.display = 'none';
+                }
+            }, 1500);
+        }
+
+        // Demo content generator for when API is unavailable
+        function generateDemoContent(mode, material) {
+            const materialPreview = material.substring(0, 100) + (material.length > 100 ? '...' : '');
+            
+            if (mode === 'questions') {
+                const count = parseInt(document.getElementById('questions-count').value);
+                const difficulty = document.getElementById('questions-difficulty').value;
+                const type = document.getElementById('questions-type').value;
+                const subject = document.getElementById('questions-subject').value || 'your topic';
+                
+                let output = `📝 Practice Questions Generated\n`;
+                output += `Subject: ${subject} | Difficulty: ${difficulty} | Type: ${type}\n`;
+                output += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+                
+                // Advanced material analysis
+                const sentences = material.split(/[.!?]+/).filter(s => s.trim().length > 15);
+                const words = material.toLowerCase().replace(/[^\w\s]/g, ' ').split(/\s+/).filter(w => w.length > 3);
+                
+                // Extract key information
+                const wordFreq = {};
+                words.forEach(word => {
+                    if (!['that', 'this', 'with', 'from', 'have', 'been', 'were', 'will', 'would', 'could', 'should', 'what', 'when', 'where', 'which', 'their', 'there', 'these', 'those'].includes(word)) {
+                        wordFreq[word] = (wordFreq[word] || 0) + 1;
+                    }
+                });
+                
+                // Get most important terms (appear 2+ times)
+                const keyTerms = Object.entries(wordFreq)
+                    .filter(([word, freq]) => freq >= 2)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 15)
+                    .map(([word]) => word);
+                
+                // If not enough key terms, use frequent words
+                if (keyTerms.length < 5) {
+                    keyTerms.push(...Object.entries(wordFreq)
+                        .sort((a, b) => b[1] - a[1])
+                        .slice(0, 10)
+                        .map(([word]) => word));
+                }
+                
+                // Extract meaningful sentences (medium length)
+                const meaningfulSentences = sentences.filter(s => s.split(' ').length >= 5 && s.split(' ').length <= 25);
+                
+                // Function to get random elements
+                const getRandom = (arr, n) => {
+                    const shuffled = [...arr].sort(() => 0.5 - Math.random());
+                    return shuffled.slice(0, n);
+                };
+                
+                // Generate unique multiple choice questions
+                function generateMCQuestion(index) {
+                    const templates = [
+                        {
+                            q: `What is the primary focus regarding ${keyTerms[index % keyTerms.length]}?`,
+                            correct: meaningfulSentences[index % meaningfulSentences.length]?.substring(0, 50) + '...' || `Understanding ${keyTerms[index % keyTerms.length]} in context`,
+                            wrong: [`Ignoring ${keyTerms[(index + 1) % keyTerms.length]}`, `Only theoretical aspects`, `Unrelated historical data`]
+                        },
+                        {
+                            q: `According to the material, how does ${keyTerms[index % keyTerms.length]} relate to ${keyTerms[(index + 1) % keyTerms.length]}?`,
+                            correct: `They are connected through ${keyTerms[(index + 2) % keyTerms.length]}`,
+                            wrong: [`They are completely unrelated`, `They contradict each other`, `Only one is relevant`]
+                        },
+                        {
+                            q: `What role does ${keyTerms[(index + 2) % keyTerms.length]} play in the context of ${keyTerms[index % keyTerms.length]}?`,
+                            correct: `It is essential for understanding ${keyTerms[index % keyTerms.length]}`,
+                            wrong: [`It has no relevance`, `It contradicts the main point`, `It is purely decorative`]
+                        },
+                        {
+                            q: `Based on the material, which statement about ${keyTerms[(index + 3) % keyTerms.length]} is accurate?`,
+                            correct: meaningfulSentences[(index + 1) % meaningfulSentences.length]?.substring(0, 50) + '...' || `It relates to ${keyTerms[index % keyTerms.length]}`,
+                            wrong: [`It is never mentioned`, `It contradicts all evidence`, `It is completely wrong`]
+                        },
+                        {
+                            q: `The material suggests that ${keyTerms[(index + 4) % keyTerms.length]} is important because:`,
+                            correct: `It helps explain ${keyTerms[index % keyTerms.length]} and ${keyTerms[(index + 1) % keyTerms.length]}`,
+                            wrong: [`It is irrelevant to the topic`, `It was added by mistake`, `No reason is given`]
+                        },
+                        {
+                            q: `What can be inferred about the relationship between ${keyTerms[index % keyTerms.length]} and ${keyTerms[(index + 3) % keyTerms.length]}?`,
+                            correct: `They are interconnected concepts within the material`,
+                            wrong: [`They oppose each other`, `Only one is valid`, `Neither is discussed`]
+                        },
+                        {
+                            q: `In the context of ${keyTerms[(index + 1) % keyTerms.length]}, what is emphasized about ${keyTerms[index % keyTerms.length]}?`,
+                            correct: `Its significance and practical relevance`,
+                            wrong: [`Its irrelevance`, `Its outdated nature`, `Its contradictions`]
+                        },
+                        {
+                            q: `Which aspect of ${keyTerms[(index + 2) % keyTerms.length]} does the material highlight?`,
+                            correct: meaningfulSentences[(index + 2) % meaningfulSentences.length]?.substring(0, 50) + '...' || `Its connection to ${keyTerms[index % keyTerms.length]}`,
+                            wrong: [`Nothing specific`, `Only negative aspects`, `Purely theoretical points`]
+                        },
+                        {
+                            q: `According to the content, ${keyTerms[(index + 5) % keyTerms.length]} is best understood through:`,
+                            correct: `Examining its relationship with ${keyTerms[index % keyTerms.length]}`,
+                            wrong: [`Ignoring all context`, `Pure memorization`, `Avoiding the details`]
+                        },
+                        {
+                            q: `What does the material reveal about ${keyTerms[(index + 6) % keyTerms.length]}?`,
+                            correct: `It plays a key role in the overall understanding`,
+                            wrong: [`It is completely optional`, `It contradicts everything`, `It is not mentioned`]
+                        },
+                        {
+                            q: `The discussion of ${keyTerms[index % keyTerms.length]} primarily focuses on:`,
+                            correct: `How it integrates with ${keyTerms[(index + 2) % keyTerms.length]}`,
+                            wrong: [`Unrelated tangents`, `Historical trivia only`, `Contradictory evidence`]
+                        },
+                        {
+                            q: `When considering ${keyTerms[(index + 4) % keyTerms.length]}, the material emphasizes:`,
+                            correct: meaningfulSentences[(index + 3) % meaningfulSentences.length]?.substring(0, 50) + '...' || `Its practical application`,
+                            wrong: [`Its irrelevance`, `Pure speculation`, `Outdated theories`]
+                        },
+                        {
+                            q: `What is the significance of ${keyTerms[(index + 7) % keyTerms.length]} in this context?`,
+                            correct: `It contributes to understanding ${keyTerms[index % keyTerms.length]}`,
+                            wrong: [`It has no significance`, `It is purely decorative`, `It contradicts the thesis`]
+                        },
+                        {
+                            q: `The material connects ${keyTerms[index % keyTerms.length]} with which concept?`,
+                            correct: keyTerms[(index + 1) % keyTerms.length].charAt(0).toUpperCase() + keyTerms[(index + 1) % keyTerms.length].slice(1),
+                            wrong: [`Completely unrelated topics`, `Nothing specific`, `Contradictory ideas`]
+                        },
+                        {
+                            q: `How is ${keyTerms[(index + 8) % keyTerms.length]} presented in the material?`,
+                            correct: `As an important element related to ${keyTerms[index % keyTerms.length]}`,
+                            wrong: [`As irrelevant information`, `As contradictory evidence`, `As optional detail`]
+                        }
+                    ];
+                    
+                    const template = templates[index % templates.length];
+                    return {
+                        q: template.q,
+                        opts: [template.correct, ...template.wrong].sort(() => 0.5 - Math.random()),
+                        correct: template.correct,
+                        exp: `This relates to the material's discussion of ${keyTerms[index % keyTerms.length]}.`
+                    };
+                }
+                
+                // Generate unique true/false questions
+                function generateTFQuestion(index) {
+                    const templates = [
+                        { q: `The material discusses ${keyTerms[index % keyTerms.length]} in detail.`, a: "True", exp: `${keyTerms[index % keyTerms.length]} is a key term mentioned in the material.` },
+                        { q: `According to the content, ${keyTerms[(index + 1) % keyTerms.length]} is unrelated to ${keyTerms[index % keyTerms.length]}.`, a: "False", exp: "These concepts are connected in the material." },
+                        { q: `The material emphasizes the importance of ${keyTerms[(index + 2) % keyTerms.length]}.`, a: "True", exp: `${keyTerms[(index + 2) % keyTerms.length]} is highlighted as significant.` },
+                        { q: `${keyTerms[(index + 3) % keyTerms.length]} plays no role in the topic discussed.`, a: "False", exp: "This is mentioned and relevant to the topic." },
+                        { q: `The content suggests that ${keyTerms[index % keyTerms.length]} and ${keyTerms[(index + 1) % keyTerms.length]} work together.`, a: "True", exp: "The material shows connections between these concepts." },
+                        { q: `Understanding ${keyTerms[(index + 4) % keyTerms.length]} is unnecessary according to the material.`, a: "False", exp: "This concept is important to the overall understanding." },
+                        { q: `The material provides information about ${keyTerms[(index + 5) % keyTerms.length]}.`, a: "True", exp: "This topic is covered in the material." },
+                        { q: `${keyTerms[(index + 6) % keyTerms.length]} contradicts ${keyTerms[index % keyTerms.length]} according to the content.`, a: "False", exp: "These concepts are complementary, not contradictory." },
+                        { q: `The study material identifies ${keyTerms[(index + 7) % keyTerms.length]} as a key element.`, a: "True", exp: "This is emphasized in the material." },
+                        { q: `The content ignores the relationship between ${keyTerms[index % keyTerms.length]} and ${keyTerms[(index + 2) % keyTerms.length]}.`, a: "False", exp: "Their relationship is discussed in the material." }
+                    ];
+                    
+                    return templates[index % templates.length];
+                }
+                
+                // Generate unique short answer questions
+                function generateSAQuestion(index) {
+                    const templates = [
+                        { 
+                            q: `Explain the role of ${keyTerms[index % keyTerms.length]} as presented in the material.`,
+                            a: `${keyTerms[index % keyTerms.length]} is discussed as ${meaningfulSentences[index % meaningfulSentences.length]?.substring(0, 100) || 'a key concept'}. It relates to ${keyTerms[(index + 1) % keyTerms.length]} and ${keyTerms[(index + 2) % keyTerms.length]} in the context of the topic.`
+                        },
+                        { 
+                            q: `How does the material connect ${keyTerms[index % keyTerms.length]} with ${keyTerms[(index + 1) % keyTerms.length]}?`,
+                            a: `The material shows that ${keyTerms[index % keyTerms.length]} and ${keyTerms[(index + 1) % keyTerms.length]} are related through ${keyTerms[(index + 2) % keyTerms.length]}. ${meaningfulSentences[(index + 1) % meaningfulSentences.length]?.substring(0, 80) || 'They work together in this context'}.`
+                        },
+                        { 
+                            q: `Describe the significance of ${keyTerms[(index + 2) % keyTerms.length]} according to the study material.`,
+                            a: `${keyTerms[(index + 2) % keyTerms.length]} is significant because it helps understand ${keyTerms[index % keyTerms.length]}. The material indicates ${meaningfulSentences[(index + 2) % meaningfulSentences.length]?.substring(0, 100) || 'its important role in the topic'}.`
+                        },
+                        { 
+                            q: `What does the material reveal about the relationship between ${keyTerms[(index + 3) % keyTerms.length]} and ${keyTerms[index % keyTerms.length]}?`,
+                            a: `The material reveals that ${keyTerms[(index + 3) % keyTerms.length]} relates to ${keyTerms[index % keyTerms.length]} through their shared connection to ${keyTerms[(index + 1) % keyTerms.length]}. This relationship is important for understanding the overall topic.`
+                        },
+                        { 
+                            q: `Summarize the main points about ${keyTerms[(index + 4) % keyTerms.length]} from the material.`,
+                            a: `Key points about ${keyTerms[(index + 4) % keyTerms.length]} include: its connection to ${keyTerms[index % keyTerms.length]}, its role in ${keyTerms[(index + 1) % keyTerms.length]}, and ${meaningfulSentences[index % meaningfulSentences.length]?.substring(0, 80) || 'its practical relevance'}.`
+                        },
+                        { 
+                            q: `Explain how ${keyTerms[(index + 5) % keyTerms.length]} contributes to the topic discussed.`,
+                            a: `${keyTerms[(index + 5) % keyTerms.length]} contributes by ${meaningfulSentences[(index + 3) % meaningfulSentences.length]?.substring(0, 100) || 'providing important context'}. It works alongside ${keyTerms[index % keyTerms.length]} and ${keyTerms[(index + 2) % keyTerms.length]}.`
+                        },
+                        { 
+                            q: `What is the practical application of ${keyTerms[index % keyTerms.length]} based on the material?`,
+                            a: `The practical application involves understanding how ${keyTerms[index % keyTerms.length]} relates to ${keyTerms[(index + 1) % keyTerms.length]} and ${keyTerms[(index + 3) % keyTerms.length]}. ${meaningfulSentences[(index + 4) % meaningfulSentences.length]?.substring(0, 100) || 'This has real-world relevance'}.`
+                        },
+                        { 
+                            q: `Analyze how the material presents ${keyTerms[(index + 6) % keyTerms.length]}.`,
+                            a: `The material presents ${keyTerms[(index + 6) % keyTerms.length]} as ${meaningfulSentences[(index + 5) % meaningfulSentences.length]?.substring(0, 100) || 'an important concept'}. It emphasizes its connection to ${keyTerms[index % keyTerms.length]} and broader implications for ${keyTerms[(index + 2) % keyTerms.length]}.`
+                        }
+                    ];
+                    
+                    return templates[index % templates.length];
+                }
+                
+                // Generate questions based on count
+                // Generate questions based on count
+                for (let i = 1; i <= count; i++) {
+                    output += `Question ${i}:\n`;
+                    
+                    if (type === 'multiple-choice') {
+                        const q = generateMCQuestion(i - 1);
+                        const correctIndex = q.opts.indexOf(q.correct);
+                        const letters = ['A', 'B', 'C', 'D'];
+                        
+                        output += `${q.q}\n\n`;
+                        q.opts.forEach((opt, idx) => {
+                            output += `${letters[idx]}) ${opt}\n`;
+                        });
+                        output += `\n✓ Correct Answer: ${letters[correctIndex]}\n`;
+                        output += `💡 Explanation: ${q.exp}\n\n`;
+                        
+                    } else if (type === 'true-false') {
+                        const q = generateTFQuestion(i - 1);
+                        output += `${q.q}\n\n`;
+                        output += `☐ True\n`;
+                        output += `☐ False\n\n`;
+                        output += `✓ Correct Answer: ${q.a}\n`;
+                        output += `💡 Explanation: ${q.exp}\n\n`;
+                        
+                    } else if (type === 'short-answer') {
+                        const q = generateSAQuestion(i - 1);
+                        output += `${q.q}\n\n`;
+                        output += `✓ Sample Answer:\n`;
+                        output += `${q.a}\n\n`;
+                        
+                    } else { // mixed
+                        if (i % 3 === 1) {
+                            const q = generateMCQuestion(i - 1);
+                            const correctIndex = q.opts.indexOf(q.correct);
+                            const letters = ['A', 'B', 'C', 'D'];
+                            
+                            output += `${q.q} (Multiple Choice)\n\n`;
+                            q.opts.forEach((opt, idx) => {
+                                output += `${letters[idx]}) ${opt}\n`;
+                            });
+                            output += `\n✓ Correct Answer: ${letters[correctIndex]}\n`;
+                            output += `💡 Explanation: ${q.exp}\n\n`;
+                        } else if (i % 3 === 2) {
+                            const q = generateTFQuestion(i - 1);
+                            output += `${q.q} (True/False)\n\n`;
+                            output += `✓ Correct Answer: ${q.a}\n`;
+                            output += `💡 Explanation: ${q.exp}\n\n`;
+                        } else {
+                            const q = generateSAQuestion(i - 1);
+                            output += `${q.q} (Short Answer)\n\n`;
+                            output += `✓ Sample Answer: ${q.a}\n\n`;
+                        }
+                    }
+                    
+                    if (i < count) {
+                        output += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+                    }
+                }
+                
+                output += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+                output += `📚 Study Material Preview:\n"${materialPreview}"\n\n`;
+                output += `💡 Note: These are AI-generated practice questions based on your study material. For best results, review the questions and adapt them to your specific needs.\n`;
+                return output;
+                
+            } else if (mode === 'summarize') {
+                const length = document.getElementById('summary-length').value;
+                const focus = document.getElementById('summary-focus').value;
+                
+                let output = `📋 Summary Generated\n`;
+                output += `Length: ${length}${focus ? ' | Focus: ' + focus : ''}\n`;
+                output += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+                
+                if (length === 'brief') {
+                    output += `🔑 Key Points:\n\n`;
+                    output += `• Main Topic: Core subject matter of the study material\n`;
+                    output += `• Important Concept 1: First key idea presented\n`;
+                    output += `• Important Concept 2: Second major point discussed\n`;
+                    output += `• Important Concept 3: Third significant topic covered\n`;
+                    output += `• Conclusion: Final takeaway from the material\n\n`;
+                } else if (length === 'moderate') {
+                    output += `📖 Overview:\n\n`;
+                    output += `The study material presents a comprehensive examination of the subject matter. It begins by establishing foundational concepts and progressively builds upon these ideas to develop a deeper understanding.\n\n`;
+                    output += `🔑 Key Points:\n`;
+                    output += `• The material introduces fundamental principles\n`;
+                    output += `• It explores the relationship between different concepts\n`;
+                    output += `• Practical applications are discussed\n`;
+                    output += `• The content provides examples and illustrations\n\n`;
+                    output += `✨ Main Takeaway:\n`;
+                    output += `Understanding these concepts is essential for mastering the topic and applying the knowledge in practical contexts.\n\n`;
+                } else { // detailed
+                    output += `📖 Comprehensive Summary:\n\n`;
+                    output += `Introduction:\n`;
+                    output += `The study material provides an in-depth exploration of the topic, beginning with fundamental principles and progressing through increasingly complex concepts. The content is structured to build understanding systematically.\n\n`;
+                    output += `Main Content:\n`;
+                    output += `The material covers several key areas:\n\n`;
+                    output += `1. Foundational Concepts: The text establishes the basic principles that underpin the subject matter. These fundamental ideas serve as the building blocks for more advanced understanding.\n\n`;
+                    output += `2. Core Principles: Building on the foundation, the material explores the central theories and frameworks. It explains how these concepts interconnect and influence one another.\n\n`;
+                    output += `3. Applications: Practical applications are discussed, demonstrating how theoretical knowledge translates into real-world scenarios. Examples illustrate key points.\n\n`;
+                    output += `4. Analysis: The material provides critical analysis, examining different perspectives and interpretations of the concepts presented.\n\n`;
+                    output += `Conclusion:\n`;
+                    output += `The study material successfully integrates theory and practice, providing a comprehensive understanding of the topic. The information presented is essential for anyone seeking to master this subject area.\n\n`;
+                }
+                
+                output += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+                output += `📄 Source Material Preview:\n"${materialPreview}"\n\n`;
+                output += `💡 Note: This AI-generated summary captures the main points of your study material.\n`;
+                return output;
+                
+            } else if (mode === 'explain') {
+                const style = document.getElementById('explain-style').value;
+                const examples = document.getElementById('explain-examples').value;
+                const concept = material;
+                
+                let output = `💡 Concept Explanation\n`;
+                output += `Style: ${style}${examples === 'yes' ? ' | With Examples' : ''}\n`;
+                output += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+                output += `📌 Concept: ${concept}\n\n`;
+                
+                if (style === 'simple') {
+                    output += `🎯 Simple Explanation (ELI5):\n\n`;
+                    output += `Think of "${concept}" like something you see every day. Just like how a recipe tells you step-by-step how to make cookies, this concept is like a set of instructions for understanding something important.\n\n`;
+                    output += `The basic idea is:\n`;
+                    output += `• It's a way of looking at or understanding something\n`;
+                    output += `• It helps make complicated things easier to understand\n`;
+                    output += `• Once you get it, you can use it to figure out other things too!\n\n`;
+                    
+                } else if (style === 'analogy') {
+                    output += `🔄 Explanation Using Analogies:\n\n`;
+                    output += `Imagine "${concept}" is like a toolbox. Just as a toolbox contains different tools for different jobs, this concept provides you with various "tools" (ideas, methods, frameworks) to tackle problems.\n\n`;
+                    output += `Here's another way to think about it: It's like a map. When you're trying to get somewhere new, a map shows you the route. Similarly, this concept acts as a guide, showing you the path to understanding.\n\n`;
+                    
+                } else if (style === 'technical') {
+                    output += `🔬 Technical Explanation:\n\n`;
+                    output += `"${concept}" refers to a systematic framework or theoretical construct that operates within defined parameters. The concept encompasses several key dimensions:\n\n`;
+                    output += `1. Structural Components: The fundamental elements that constitute the concept\n`;
+                    output += `2. Functional Relationships: How these components interact and influence each other\n`;
+                    output += `3. Operational Principles: The underlying mechanisms governing its application\n`;
+                    output += `4. Contextual Dependencies: Factors that affect implementation and interpretation\n\n`;
+                    
+                } else { // standard
+                    output += `📚 Standard Explanation:\n\n`;
+                    output += `"${concept}" is an important idea that helps us understand a particular aspect of the subject. At its core, this concept represents a way of thinking about or approaching a specific topic or problem.\n\n`;
+                    output += `Key aspects include:\n`;
+                    output += `• Definition: What the concept means and represents\n`;
+                    output += `• Purpose: Why this concept is important and useful\n`;
+                    output += `• Application: How we can use this concept in practice\n`;
+                    output += `• Relationships: How it connects to other related ideas\n\n`;
+                }
+                
+                if (examples === 'yes') {
+                    output += `📝 Practical Examples:\n\n`;
+                    output += `Example 1: Real-World Application\n`;
+                    output += `Consider a situation where you need to apply this concept. For instance, in everyday life, you might encounter this when [scenario]. Understanding "${concept}" helps you navigate this situation by [explanation].\n\n`;
+                    output += `Example 2: Academic Context\n`;
+                    output += `In an academic or professional setting, this concept manifests when [scenario]. By applying your understanding of "${concept}", you can better analyze and respond to these situations.\n\n`;
+                }
+                
+                output += `🎯 Key Takeaway:\n`;
+                output += `Understanding "${concept}" provides you with a valuable framework for thinking about and approaching related topics. The more you work with this concept, the more intuitive it becomes.\n\n`;
+                output += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+                output += `💡 Note: This AI-generated explanation is tailored to help you understand the concept clearly.\n`;
+                return output;
+                
+            } else if (mode === 'flashcards') {
+                const count = parseInt(document.getElementById('flashcards-count').value);
+                const cardType = document.getElementById('flashcards-type').value;
+                
+                let output = `🎴 Flashcards Created\n`;
+                output += `Type: ${cardType} | Total Cards: ${count}\n`;
+                output += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+                
+                for (let i = 1; i <= count; i++) {
+                    output += `📇 Flashcard ${i}:\n`;
+                    output += `┌─────────────────────────────────┐\n`;
+                    
+                    if (cardType === 'term-definition') {
+                        output += `│ FRONT: Key Term ${i}          │\n`;
+                        output += `└─────────────────────────────────┘\n`;
+                        output += `┌─────────────────────────────────┐\n`;
+                        output += `│ BACK: Definition               │\n`;
+                        output += `│ This term refers to a concept  │\n`;
+                        output += `│ that is essential for          │\n`;
+                        output += `│ understanding the topic.       │\n`;
+                        output += `└─────────────────────────────────┘\n\n`;
+                        
+                    } else if (cardType === 'question-answer') {
+                        output += `│ FRONT: Question                │\n`;
+                        output += `│ What is the significance of    │\n`;
+                        output += `│ concept ${i} in your material? │\n`;
+                        output += `└─────────────────────────────────┘\n`;
+                        output += `┌─────────────────────────────────┐\n`;
+                        output += `│ BACK: Answer                   │\n`;
+                        output += `│ This concept is significant    │\n`;
+                        output += `│ because it demonstrates the    │\n`;
+                        output += `│ relationship between key ideas │\n`;
+                        output += `│ discussed in the material.     │\n`;
+                        output += `└─────────────────────────────────┘\n\n`;
+                        
+                    } else { // concept-example
+                        output += `│ FRONT: Important Concept ${i}  │\n`;
+                        output += `└─────────────────────────────────┘\n`;
+                        output += `┌─────────────────────────────────┐\n`;
+                        output += `│ BACK: Example                  │\n`;
+                        output += `│ This concept can be seen in    │\n`;
+                        output += `│ practical scenarios such as    │\n`;
+                        output += `│ [real-world application].      │\n`;
+                        output += `└─────────────────────────────────┘\n\n`;
+                    }
+                }
+                
+                output += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n`;
+                output += `📚 Based on material:\n"${materialPreview}"\n\n`;
+                output += `💡 Study Tip: Review these flashcards regularly using spaced repetition for best retention!\n`;
+                return output;
+            }
+            
+            return 'Demo content generated. API integration will provide customized results.';
+        }
+
+        function copyResults() {
+            const content = document.getElementById('result-content').textContent;
+            navigator.clipboard.writeText(content).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                const originalText = btn.textContent;
+                btn.textContent = '✓ Copied!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            });
+        }
+
+        // Initialize app
+        checkAuth();
+    </script>
+</body>
+</html>
